@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planthunt: Plant Identifier</title>
+    <title>PlantHunt: Plant Identifier</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
     <link rel="icon" href="logo.png" />
     <style>
@@ -117,13 +117,13 @@
         .plant-image {
             flex-basis: 100%;
             margin-bottom: 30px;
+            text-align: center;
         }
 
         .plant-image img {
-        width: auto;
-        max-width: 100%;
-        height: auto;
-        border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
         }
 
         .plant-details, .plant-description {
@@ -144,28 +144,28 @@
             color: var(--secondary-color);
         }
 
+        .download-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
         .error {
             color: #d9534f;
             font-weight: bold;
             text-align: center;
         }
-
-        .download-btn {
-        display: block;
-        margin: 20px auto;
-        padding: 10px 20px;
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background-color 0.3s ease;
-}
-
-.download-btn:hover {
-    background-color: var(--secondary-color);
-}
     </style>
 </head>
 <body>
@@ -226,8 +226,6 @@
                 identifyPlant(base64Image);
             };
             reader.readAsDataURL(file);
-            // Store the file in the input element for later use
-            document.getElementById('imageUpload').files = new FileList([file]);
         }
 
         async function identifyPlant(base64Image) {
@@ -256,7 +254,7 @@
                 }
 
                 const responseData = await response.json();
-                console.log('API Response:', responseData);  // Log the full response
+                console.log('API Response:', responseData);
                 displayResult(responseData);
             } catch (error) {
                 console.error('Error:', error);
@@ -267,60 +265,107 @@
         }
 
         function displayResult(data) {
-    if (data.suggestions && data.suggestions.length > 0) {
-        const plant = data.suggestions[0];
-        let html = `
-            <div class="plant-info">
-                <div class="plant-image">
-                    <img src="${document.getElementById('imageUpload').files[0] ? URL.createObjectURL(document.getElementById('imageUpload').files[0]) : ''}" alt="${plant.plant_name || 'Uploaded plant image'}">
-                </div>
-                <div class="plant-details">
-                    <h2>${plant.plant_name || 'Unknown Plant'}</h2>
-                    <p><strong>Common Names:</strong> ${plant.plant_details.common_names ? plant.plant_details.common_names.join(', ') : 'Not available'}</p>
-                    <p><strong>Scientific Name:</strong> ${plant.plant_details.scientific_name || 'Not available'}</p>
-                    <p><strong>Probability:</strong> ${plant.probability ? (plant.probability * 100).toFixed(2) : 'Unknown'}%</p>
-                    <p><strong>Edible Parts:</strong> ${plant.plant_details.edible_parts && plant.plant_details.edible_parts.length > 0 ? plant.plant_details.edible_parts.join(', ') : 'Not specified'}</p>
-                </div>
-                <div class="plant-description">
-                    <h2>Description</h2>
-                    <p>${plant.plant_details.wiki_description ? plant.plant_details.wiki_description.value : 'No description available.'}</p>
-                </div>
-                <button id="downloadBtn" class="download-btn">Download Report</button>
-            </div>
-        `;
-        result.innerHTML = html;
+            if (data.suggestions && data.suggestions.length > 0) {
+                const plant = data.suggestions[0];
+                let html = `
+                    <div class="plant-info">
+                        <div class="plant-image">
+                            <img src="${document.getElementById('imageUpload').files[0] ? URL.createObjectURL(document.getElementById('imageUpload').files[0]) : ''}" alt="${plant.plant_name || 'Uploaded plant image'}">
+                        </div>
+                        <div class="plant-details">
+                            <h2>${plant.plant_name || 'Unknown Plant'}</h2>
+                            <p><strong>Common Names:</strong> ${plant.plant_details.common_names ? plant.plant_details.common_names.join(', ') : 'Not available'}</p>
+                            <p><strong>Scientific Name:</strong> ${plant.plant_details.scientific_name || 'Not available'}</p>
+                            <p><strong>Probability:</strong> ${plant.probability ? (plant.probability * 100).toFixed(2) : 'Unknown'}%</p>
+                            <p><strong>Edible Parts:</strong> ${plant.plant_details.edible_parts && plant.plant_details.edible_parts.length > 0 ? plant.plant_details.edible_parts.join(', ') : 'Not specified'}</p>
+                        </div>
+                        <div class="plant-description">
+                            <h2>Description</h2>
+                            <p>${plant.plant_details.wiki_description ? plant.plant_details.wiki_description.value : 'No description available.'}</p>
+                        </div>
+                        <button id="downloadBtn" class="download-btn">Download Report</button>
+                    </div>
+                `;
+                result.innerHTML = html;
 
-        // Add event listener to the download button
-        document.getElementById('downloadBtn').addEventListener('click', () => downloadReport(plant));
-    } else {
-        result.innerHTML = '<p class="error">Unable to identify the plant. Please try another image.</p>';
-    }
-}
+                document.getElementById('downloadBtn').addEventListener('click', () => downloadReport(plant));
+            } else {
+                result.innerHTML = '<p class="error">Unable to identify the plant. Please try another image.</p>';
+            }
+        }
 
-function downloadReport(plant) {
-    const reportContent = `
-Plant Identification Report
+        function downloadReport(plant) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 600;
 
-Name: ${plant.plant_name || 'Unknown Plant'}
-Common Names: ${plant.plant_details.common_names ? plant.plant_details.common_names.join(', ') : 'Not available'}
-Scientific Name: ${plant.plant_details.scientific_name || 'Not available'}
-Probability: ${plant.probability ? (plant.probability * 100).toFixed(2) : 'Unknown'}%
-Edible Parts: ${plant.plant_details.edible_parts && plant.plant_details.edible_parts.length > 0 ? plant.plant_details.edible_parts.join(', ') : 'Not specified'}
+            // Set background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-Description:
-${plant.plant_details.wiki_description ? plant.plant_details.wiki_description.value : 'No description available.'}
-    `;
+            // Set font styles
+            ctx.font = 'bold 36px Poppins';
+            ctx.fillStyle = '#4CAF50';
 
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'plant_identification_report.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
+            // Draw plant name
+            ctx.fillText(plant.plant_name, 20, 50);
+
+            // Draw left column
+            ctx.font = 'bold 24px Poppins';
+            ctx.fillText('Common Names:', 20, 100);
+            ctx.fillText('Scientific Name:', 20, 160);
+            ctx.fillText('Probability:', 20, 220);
+            ctx.fillText('Edible Parts:', 20, 280);
+
+            // Draw right column
+            ctx.font = '24px Poppins';
+            ctx.fillStyle = '#333333';
+            ctx.fillText(plant.plant_details.common_names ? plant.plant_details.common_names.join(', ') : 'Not available', 20, 130);
+            ctx.fillText(plant.plant_details.scientific_name || 'Not available', 20, 190);
+            ctx.fillText(`${(plant.probability * 100).toFixed(2)}%`, 20, 250);
+            ctx.fillText(plant.plant_details.edible_parts && plant.plant_details.edible_parts.length > 0 ? plant.plant_details.edible_parts.join(', ') : 'Not specified', 20, 310);
+
+            // Draw description
+            ctx.font = 'bold 36px Poppins';
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillText('Description', 400, 50);
+            ctx.font = '18px Poppins';
+            ctx.fillStyle = '#333333';
+            const description = plant.plant_details.wiki_description ? plant.plant_details.wiki_description.value : 'No description available.';
+            wrapText(ctx, description, 400, 80, 380, 24);
+
+            // Convert canvas to image and download
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'plant_identification_report.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = context.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+        }
     </script>
 </body>
 </html>
